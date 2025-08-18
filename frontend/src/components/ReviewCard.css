@@ -1,0 +1,21 @@
+.review-card {
+  background-color: #fff;
+  padding: 10px;
+  margin: 8px 0;
+  border-radius: 8px;
+  box-shadow: 0 1px 5px rgba(0,0,0,0.1);
+}
+
+.review-card h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.review-card p {
+  margin: 5px 0;
+  color: #333;
+}
+
+.review-card small {
+  color: #888;
+}
