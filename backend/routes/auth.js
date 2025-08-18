@@ -1,46 +1,71 @@
 const express = require("express");
 const router = express.Router();
+const User = require("../models/Users");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const User = require('../models/Users');
+const auth = require("../middleware/auth"); // JWT middleware
 
-// REGISTER
+// ================== Register ==================
 router.post("/register", async (req, res) => {
   try {
     const { username, email, password } = req.body;
 
+    // Check if user already exists
     let user = await User.findOne({ email });
-    if (user) return res.status(400).json({ msg: "User already exists" });
+    if (user) return res.status(400).json({ message: "User already exists" });
 
+    // Hash password
     const salt = await bcrypt.genSalt(10);
-    const hashedPass = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-    user = new User({ username, email, password: hashedPass });
+    // Create new user
+    user = new User({
+      username,
+      email,
+      password: hashedPassword,
+    });
+
     await user.save();
 
-    res.json({ msg: "✅ User registered successfully" });
+    res.status(201).json(user);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err.message);
+    res.status(500).send("Server error");
   }
 });
 
-// LOGIN
+// ================== Login ==================
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    // Check if user exists
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ msg: "Invalid credentials" });
+    if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
+    // Compare password
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ msg: "Invalid credentials" });
+    if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "1d" });
+    // Generate JWT token
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "30d" });
 
-    res.json({ token, user: { id: user._id, username: user.username, email: user.email } });
+    res.json({
+      _id: user._id,
+      username: user.username,
+      email: user.email,
+      token,
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err.message);
+    res.status(500).send("Server error");
   }
+});
+
+// ================== Protected Route Example ==================
+router.get("/protected", auth, (req, res) => {
+  // req.user contains decoded user info from JWT
+  res.json({ message: "You are authorized ✅", user: req.user });
 });
 
 module.exports = router;
