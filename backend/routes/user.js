@@ -49,6 +49,18 @@ router.put("/:id", async (req, res) => {
   }
 });
 
+const Review = require("../models/Review");
+
+// GET all reviews by user ID
+router.get("/reviews/:id", async (req, res) => {
+  try {
+    const reviews = await Review.find({ user: req.params.id }).populate("game");
+    res.json(reviews);
+  } catch (err) {
+    res.status(500).json({ message: "Server Error" });
+  }
+});
+
 // DELETE user by ID
 router.delete("/:id", async (req, res) => {
   try {

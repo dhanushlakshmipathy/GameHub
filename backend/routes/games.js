@@ -59,13 +59,13 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// ================== Trending games (top 5 by review count) ==================
-router.get("/trending", async (req, res) => {
+// ================== Trending games by review count ==================
+router.get("/trending/review-count", async (req, res) => {
   try {
     const trending = await Game.aggregate([
       {
         $lookup: {
-          from: "reviews", // collection name must match exactly
+          from: "reviews",
           localField: "_id",
           foreignField: "game",
           as: "reviews",
@@ -78,10 +78,47 @@ router.get("/trending", async (req, res) => {
       { $limit: 5 },
     ]);
 
-    console.log("Trending Result:", trending); // debug log
     res.json(trending);
   } catch (err) {
-    console.error("Trending Route Error:", err);
+    console.error("Trending by Review Count Error:", err);
+    res.status(500).json({ message: "Server Error", error: err.message });
+  }
+});
+
+// ================== Trending games by average rating ==================
+router.get("/trending/average-rating", async (req, res) => {
+  try {
+    const trending = await Game.aggregate([
+      {
+        $lookup: {
+          from: "reviews",
+          localField: "_id",
+          foreignField: "game",
+          as: "reviews",
+        },
+      },
+      {
+        $addFields: {
+          averageRating: { $avg: "$reviews.rating" },
+          reviewCount: { $size: "$reviews" },
+        },
+      },
+      { $sort: { averageRating: -1, reviewCount: -1, createdAt: -1 } },
+      { $limit: 5 },
+      {
+        $project: {
+          title: 1,
+          genre: 1,
+          platform: 1,
+          averageRating: { $ifNull: ["$averageRating", 0] },
+          reviewCount: 1,
+        },
+      },
+    ]);
+
+    res.json(trending);
+  } catch (err) {
+    console.error("Trending by Avg Rating Error:", err);
     res.status(500).json({ message: "Server Error", error: err.message });
   }
 });
@@ -107,41 +144,3 @@ router.get("/search", async (req, res) => {
 });
 
 module.exports = router;
-// ================== Trending games by average rating ==================
-router.get("/trending", async (req, res) => {
-  try {
-    const trending = await Game.aggregate([
-      {
-        $lookup: {
-          from: "reviews", // must match your Review collection name
-          localField: "_id",
-          foreignField: "game",
-          as: "reviews",
-        },
-      },
-      {
-        $addFields: {
-          averageRating: { $avg: "$reviews.rating" },
-          reviewCount: { $size: "$reviews" },
-        },
-      },
-      { $sort: { averageRating: -1, reviewCount: -1, createdAt: -1 } },
-      { $limit: 5 },
-      {
-        $project: {
-          title: 1,
-          genre: 1,
-          platform: 1,
-          averageRating: { $ifNull: ["$averageRating", 0] },
-          reviewCount: 1,
-        },
-      },
-    ]);
-
-    console.log("Trending by Avg Rating:", trending);
-    res.json(trending);
-  } catch (err) {
-    console.error("Trending by Avg Rating Error:", err);
-    res.status(500).json({ message: "Server Error", error: err.message });
-  }
-});

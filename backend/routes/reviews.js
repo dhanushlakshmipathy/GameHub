@@ -77,5 +77,44 @@ router.get("/average/:gameId", async (req, res) => {
     res.status(500).json({ message: "Server Error", error: err.message });
   }
 });
+// ================== Update a review (Protected) ==================
+router.put("/:id", auth, async (req, res) => {
+  try {
+    const review = await Review.findById(req.params.id);
+    if (!review) return res.status(404).json({ message: "Review not found" });
+
+    // Only the review owner can update
+    if (review.user.toString() !== req.user.id)
+      return res.status(401).json({ message: "Not authorized" });
+
+    const { rating, comment } = req.body;
+    if (rating) review.rating = rating;
+    if (comment) review.comment = comment;
+
+    await review.save();
+    res.json(review);
+  } catch (err) {
+    console.error("Update Review Error:", err);
+    res.status(500).json({ message: "Server Error", error: err.message });
+  }
+});
+// ================== Delete a review (Protected) ==================
+router.delete("/:id", auth, async (req, res) => {
+  try {
+    const review = await Review.findById(req.params.id);
+    if (!review) return res.status(404).json({ message: "Review not found" });
+
+    // Only the review owner can delete
+    if (review.user.toString() !== req.user.id)
+      return res.status(401).json({ message: "Not authorized" });
+
+    await review.remove();
+    res.json({ message: "Review deleted successfully" });
+  } catch (err) {
+    console.error("Delete Review Error:", err);
+    res.status(500).json({ message: "Server Error", error: err.message });
+  }
+});
+
 
 module.exports = router;
