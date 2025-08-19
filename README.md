@@ -72,5 +72,5 @@ Contributing: Fork the repository, create a new branch (git checkout -b feature/
 
 License: This project is licensed under the MIT License. See the LICENSE file for details.
 
-Contact: Dhanush Lakshmipathy — Email: your.email@example.com
- — GitHub: https://github.com/yourusername
+Contact: Dhanush Lakshmipathy — Email: lakshmipathydhanush@gmail.com
+ — GitHub: https://github.com/dhanushlakshmipathy
