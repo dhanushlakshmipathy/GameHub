@@ -1,35 +1,35 @@
 import { useEffect, useState } from "react";
-import GameCard from "../components/GameCard";
 import { getAllGames } from "../services/api";
+import GameCard from "../components/GameCard";
 
-export default function HomePage() {
+export default function HomePage(){
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchGames = async () => {
-      try {
-        const res = await getGames();
-        setGames(res.data);
-      } catch (err) {
-        console.error("Error fetching games:", err);
-      } finally {
+  useEffect(()=>{
+    (async()=>{
+      try{
+        const res = await getAllGames();
+        setGames(res.data || []);
+      }catch(e){
+        console.error(e);
+      }finally{
         setLoading(false);
       }
-    };
-    fetchGames();
-  }, []);
+    })();
+  },[]);
 
-  if (loading) return <p>Loading games...</p>;
-  if (games.length === 0) return <p>No games found.</p>;
+  if(loading) return <div className="center" style={{minHeight:200}}>Loading games…</div>;
+  if(!games.length) return <p>No games yet.</p>;
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>All Games</h1>
-      <div style={{ display: "flex", flexWrap: "wrap" }}>
-        {games.map((game) => (
-          <GameCard key={game._id} game={game} />
-        ))}
+    <div>
+      <div className="page-header">
+        <h2 className="m-0">All Games</h2>
+        <span className="subtitle">{games.length} titles</span>
+      </div>
+      <div className="grid cards">
+        {games.map(g => <GameCard key={g._id} game={g} />)}
       </div>
     </div>
   );

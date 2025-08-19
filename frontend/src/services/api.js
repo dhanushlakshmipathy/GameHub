@@ -1,25 +1,35 @@
 import axios from "axios";
 
 const API = axios.create({
-  baseURL: "http://localhost:5000/api",
+  baseURL: process.env.REACT_APP_API_URL || "http://localhost:5000/api",
+});
+
+API.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
 });
 
 // Auth
-export const registerUser = (data) => API.post("/auth/register", data);
-export const loginUser = (data) => API.post("/auth/login", data);
+export const registerUser = (payload) => API.post("/auth/register", payload);
+export const loginUser = (payload) => API.post("/auth/login", payload);
 
-// Users
+// Users (basic)
 export const getUsers = () => API.get("/users");
 
 // Games
 export const getAllGames = () => API.get("/games");
 export const getGameById = (id) => API.get(`/games/${id}`);
-export const getTrendingByReviewCount = () => API.get("/games/trending/review-count");
-export const getTrendingByAvgRating = () => API.get("/games/trending/average-rating");
-export const searchGames = (query) => API.get(`/games/search?q=${query}`);
+export const searchGames = (q) => API.get(`/games/search?q=${encodeURIComponent(q)}`);
+
+// Trending
+export const getTrendingByReviewCount = () => API.get("/games/trending");
+export const getTrendingByAvgRating = () => API.get("/games/trending");
+export const getTrending = getTrendingByAvgRating;
 
 // Reviews
-export const createReview = (token, data) => 
-  API.post("/reviews", data, { headers: { Authorization: `Bearer ${token}` } });
 export const getReviewsByGame = (gameId) => API.get(`/reviews/game/${gameId}`);
 export const getAverageRating = (gameId) => API.get(`/reviews/average/${gameId}`);
+export const createReview = (payload) => API.post("/reviews", payload);
+
+export default API;

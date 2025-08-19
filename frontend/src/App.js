@@ -8,21 +8,21 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 
-function App() {
+export default function App(){
   return (
     <Router>
       <Navbar />
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/trending" element={<Trending />} />
-        <Route path="/search" element={<Search />} />
-        <Route path="/game/:id" element={<GameDetails />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/profile" element={<Profile />} />
-      </Routes>
+      <div className="container" style={{padding:"20px 0 40px"}}>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/trending" element={<Trending />} />
+          <Route path="/search" element={<Search />} />
+          <Route path="/game/:id" element={<GameDetails />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/profile" element={<Profile />} />
+        </Routes>
+      </div>
     </Router>
   );
 }
-
-export default App;

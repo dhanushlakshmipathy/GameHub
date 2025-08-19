@@ -1,39 +1,48 @@
 import { useState } from "react";
-import { loginUser } from "../services/api";
 import { useNavigate } from "react-router-dom";
+import { loginUser } from "../services/api";
 
-export default function Login() {
+export default function Login(){
+  const nav = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleLogin = async () => {
-    try {
+  const submit = async(e)=>{
+    e.preventDefault();
+    setLoading(true); setError("");
+    try{
       const res = await loginUser({ email, password });
-      localStorage.setItem("token", res.data.token);
-      navigate("/");
-    } catch (err) {
-      console.error(err);
-      alert("Invalid credentials");
+      const token = res.data?.token;
+      if(token){
+        localStorage.setItem("token", token);
+        nav("/");
+        return;
+      }
+      setError("Invalid response");
+    }catch(err){
+      setError(err.response?.data?.message || "Login failed");
+    }finally{
+      setLoading(false);
     }
   };
 
   return (
-    <div>
-      <h2>Login</h2>
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-      />
-      <button onClick={handleLogin}>Login</button>
+    <div style={{maxWidth:420, margin:"0 auto"}}>
+      <h2>Log in</h2>
+      <form onSubmit={submit}>
+        <div className="form-row">
+          <label>Email</label>
+          <input className="input" value={email} onChange={(e)=>setEmail(e.target.value)} />
+        </div>
+        <div className="form-row">
+          <label>Password</label>
+          <input className="input" type="password" value={password} onChange={(e)=>setPassword(e.target.value)} />
+        </div>
+        {error && <div className="subtitle" style={{color:"var(--danger)"}}>{error}</div>}
+        <button className="btn mt-2" disabled={loading}>{loading ? "…" : "Log in"}</button>
+      </form>
     </div>
   );
 }

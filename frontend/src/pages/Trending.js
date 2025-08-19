@@ -1,35 +1,35 @@
 import { useEffect, useState } from "react";
+import { getTrending } from "../services/api";
 import GameCard from "../components/GameCard";
-import { getTrendingByAvgRating, getTrendingByReviewCount } from "../services/api";
 
-export default function Trending() {
-  const [trendingGames, setTrendingGames] = useState([]);
+export default function Trending(){
+  const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchTrending = async () => {
-      try {
+  useEffect(()=>{
+    (async()=>{
+      try{
         const res = await getTrending();
-        setTrendingGames(res.data);
-      } catch (err) {
-        console.error("Error fetching trending games:", err);
-      } finally {
+        setItems(res.data || []);
+      }catch(e){
+        console.error(e);
+      }finally{
         setLoading(false);
       }
-    };
-    fetchTrending();
-  }, []);
+    })();
+  },[]);
 
-  if (loading) return <p>Loading trending games...</p>;
-  if (trendingGames.length === 0) return <p>No trending games available.</p>;
+  if(loading) return <div className="center" style={{minHeight:200}}>Loading…</div>;
+  if(!items.length) return <p>No trending games right now.</p>;
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>Trending Games</h1>
-      <div style={{ display: "flex", flexWrap: "wrap" }}>
-        {trendingGames.map((game) => (
-          <GameCard key={game._id} game={game} />
-        ))}
+    <div>
+      <div className="page-header">
+        <h2 className="m-0">Trending</h2>
+        <span className="subtitle">{items.length} games</span>
+      </div>
+      <div className="grid cards">
+        {items.map(g => <GameCard key={g._id} game={g} />)}
       </div>
     </div>
   );

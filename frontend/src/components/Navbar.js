@@ -1,62 +1,65 @@
-import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
 
-export default function Navbar() {
-  const navigate = useNavigate();
-  const token = localStorage.getItem("token"); // check if user is logged in
-  const [query, setQuery] = useState("");
+export default function Navbar(){
+  const nav = useNavigate();
+  const loc = useLocation();
+  const [q, setQ] = useState("");
+  const token = localStorage.getItem("token");
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    window.location.reload();
+  useEffect(()=>{
+    const p = new URLSearchParams(loc.search);
+    setQ(p.get("query") || "");
+  }, [loc.search]);
+
+  const submit = (e)=>{
+    e.preventDefault();
+    const query = q.trim();
+    if(!query) return;
+    nav(`/search?query=${encodeURIComponent(query)}`);
   };
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (query.trim() !== "") {
-      navigate(`/search?query=${query}`);
-      setQuery("");
-    }
+  const logout = ()=>{
+    localStorage.removeItem("token");
+    window.location.href = "/";
   };
 
   return (
-    <nav style={{
-      padding: "10px 20px",
-      borderBottom: "1px solid #ccc",
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-    }}>
-      <div>
-        <Link to="/" style={{ marginRight: 15 }}>Home</Link>
-        <Link to="/trending" style={{ marginRight: 15 }}>Trending</Link>
-        <Link to="/search" style={{ marginRight: 15 }}>Search</Link>
-      </div>
+    <div className="nav">
+      <div className="container nav-inner">
+        <Link to="/" className="brand">
+          <span className="brand-logo" />
+          <span>GameHub</span>
+        </Link>
 
-      <form onSubmit={handleSearch} style={{ display: "inline-block" }}>
-        <input
-          type="text"
-          placeholder="Search games..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          style={{ marginRight: 5 }}
-        />
-        <button type="submit">Search</button>
-      </form>
+        <div className="nav-links">
+          <Link to="/">Home</Link>
+          <Link to="/trending">Trending</Link>
+          {token && <Link to="/profile">Profile</Link>}
+        </div>
 
-      <div>
-        {token ? (
-          <>
-            <Link to="/profile" style={{ marginRight: 10 }}>Profile</Link>
-            <button onClick={handleLogout}>Logout</button>
-          </>
-        ) : (
-          <>
-            <Link to="/login" style={{ marginRight: 10 }}>Login</Link>
-            <Link to="/register">Register</Link>
-          </>
-        )}
+        <div className="nav-spacer" />
+
+        <form className="nav-search" onSubmit={submit}>
+          <input
+            placeholder="Search games…"
+            value={q}
+            onChange={(e)=>setQ(e.target.value)}
+          />
+          <button className="btn" type="submit">Search</button>
+        </form>
+
+        <div style={{marginLeft: 10, display:"flex", gap:8}}>
+          {token ? (
+            <button className="btn secondary" onClick={logout}>Logout</button>
+          ) : (
+            <>
+              <Link className="btn secondary" to="/login">Log in</Link>
+              <Link className="btn" to="/register">Sign up</Link>
+            </>
+          )}
+        </div>
       </div>
-    </nav>
+    </div>
   );
 }
