@@ -1,74 +1,70 @@
 const express = require("express");
 const router = express.Router();
-const Users = require("../models/Users");
+const User = require("../models/Users");
+const auth = require("../middleware/auth");
+const mongoose = require("mongoose");
 
-// Test route - create sample user
-router.get("/create-test", async (req, res) => {
+// Get current user profile
+router.get("/me", auth, async (req, res) => {
   try {
-    const newUser = new Users({ username: "TestUser" });
-    await newUser.save();
-    res.json({ message: "User saved to MongoDB ✅" });
+    const me = await User.findById(req.user.id).select("-password").populate("following", "username");
+    if (!me) return res.status(404).json({ message: "User not found" });
+    res.json(me);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: "Server Error", error: err.message });
   }
 });
 
-// GET all users
+// Follow a user
+router.post("/:id/follow", auth, async (req, res) => {
+  try {
+    const targetId = req.params.id;
+    if (!mongoose.Types.ObjectId.isValid(targetId)) return res.status(400).json({ message: "Invalid user id" });
+    if (targetId === req.user.id) return res.status(400).json({ message: "You cannot follow yourself" });
+
+    const me = await User.findById(req.user.id);
+    const target = await User.findById(targetId);
+    if (!target) return res.status(404).json({ message: "User not found" });
+
+    if (me.following.map(x=>x.toString()).includes(targetId)) return res.status(200).json({ message: "Already following" });
+
+    me.following.push(targetId);
+    target.followers.push(me._id);
+    await me.save();
+    await target.save();
+
+    res.json({ message: "Followed", following: me.following });
+  } catch (err) {
+    res.status(500).json({ message: "Server Error", error: err.message });
+  }
+});
+
+// Unfollow a user
+router.delete("/:id/follow", auth, async (req, res) => {
+  try {
+    const targetId = req.params.id;
+    const me = await User.findById(req.user.id);
+    const target = await User.findById(targetId);
+    if (!target) return res.status(404).json({ message: "User not found" });
+
+    me.following = me.following.filter(u => u.toString() !== targetId);
+    target.followers = target.followers.filter(u => u.toString() !== me._id.toString());
+    await me.save();
+    await target.save();
+
+    res.json({ message: "Unfollowed", following: me.following });
+  } catch (err) {
+    res.status(500).json({ message: "Server Error", error: err.message });
+  }
+});
+
+// List users (public)
 router.get("/", async (req, res) => {
   try {
-    const users = await Users.find();
+    const users = await User.find().select("username createdAt");
     res.json(users);
-  } catch (error) {
-    res.status(500).json({ message: "Server Error" });
-  }
-});
-
-// GET one user by ID
-router.get("/:id", async (req, res) => {
-  try {
-    const user = await Users.findById(req.params.id);
-    if (!user) return res.status(404).json({ message: "User not found" });
-    res.json(user);
-  } catch (error) {
-    res.status(500).json({ message: "Server Error" });
-  }
-});
-
-// PUT update user by ID
-router.put("/:id", async (req, res) => {
-  try {
-    const updatedUser = await Users.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
-    if (!updatedUser) return res.status(404).json({ message: "User not found" });
-    res.json(updatedUser);
-  } catch (error) {
-    res.status(500).json({ message: "Server Error" });
-  }
-});
-
-const Review = require("../models/Review");
-
-// GET all reviews by user ID
-router.get("/reviews/:id", async (req, res) => {
-  try {
-    const reviews = await Review.find({ user: req.params.id }).populate("game");
-    res.json(reviews);
   } catch (err) {
-    res.status(500).json({ message: "Server Error" });
-  }
-});
-
-// DELETE user by ID
-router.delete("/:id", async (req, res) => {
-  try {
-    const deletedUser = await Users.findByIdAndDelete(req.params.id);
-    if (!deletedUser) return res.status(404).json({ message: "User not found" });
-    res.json({ message: "User deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Server Error" });
+    res.status(500).json({ message: "Server Error", error: err.message });
   }
 });
 

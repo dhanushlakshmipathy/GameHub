@@ -23,8 +23,8 @@ export const getGameById = (id) => API.get(`/games/${id}`);
 export const searchGames = (q) => API.get(`/games/search?q=${encodeURIComponent(q)}`);
 
 // Trending
-export const getTrendingByReviewCount = () => API.get("/games/trending");
-export const getTrendingByAvgRating = () => API.get("/games/trending");
+export const getTrendingByReviewCount = () => API.get("/games/trending/review-count");
+export const getTrendingByAvgRating = () => API.get("/games/trending/average-rating");
 export const getTrending = getTrendingByAvgRating;
 
 // Reviews
@@ -33,3 +33,12 @@ export const getAverageRating = (gameId) => API.get(`/reviews/average/${gameId}`
 export const createReview = (payload) => API.post("/reviews", payload);
 
 export default API;
+
+
+// Users & social
+export const getMe = () => API.get("/users/me");
+export const followUser = (id) => API.post(`/users/${id}/follow`);
+export const unfollowUser = (id) => API.delete(`/users/${id}/follow`);
+
+// Feed
+export const getFeed = () => API.get("/reviews/feed");

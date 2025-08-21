@@ -117,4 +117,27 @@ router.delete("/:id", auth, async (req, res) => {
 });
 
 
+
+
+// Feed: reviews from followed users
+router.get("/feed", auth, async (req, res) => {
+  try {
+    const User = require("../models/Users");
+    const me = await User.findById(req.user.id);
+    const followingIds = me?.following || [];
+    if (!followingIds.length) return res.json([]);
+
+    const Review = require("../models/Review");
+    const items = await Review.find({ user: { $in: followingIds } })
+      .populate("user", "username")
+      .populate("game", "title genre platform")
+      .sort({ createdAt: -1 })
+      .limit(50);
+
+    res.json(items);
+  } catch (err) {
+    res.status(500).json({ message: "Server Error", error: err.message });
+  }
+});
+
 module.exports = router;

@@ -1,4 +1,5 @@
 import StarRating from "./StarRating";
+import FollowButton from "./FollowButton";
 
 export default function ReviewCard({ review }){
   return (
@@ -6,6 +7,7 @@ export default function ReviewCard({ review }){
       <div style={{display:"flex", alignItems:"center", justifyContent:"space-between"}}>
         <div style={{display:"flex", alignItems:"center", gap:8}}>
           <div className="badge">{review.user?.username || "Anon"}</div>
+          <FollowButton userId={review.user?._id} />
           <StarRating value={review.rating} />
         </div>
         <div className="subtitle">{new Date(review.createdAt).toLocaleDateString()}</div>
